@@ -19,7 +19,7 @@
 #define MAXSIZE     1024
 #define IPADDRESS   "127.0.0.1"
 #define SERV_PORT   9997
-#define FDSIZE      1000
+#define FD_SIZE      1000
 #define EPOLLEVENTS 20
 
 //处理发起的连接
@@ -27,9 +27,9 @@ void handle_connection(int sockfd);
 //事件处理函数
 void handle_events(int epollfd,struct epoll_event *events,int num,int sockfd,char *buf);
 //读处理
-void read(int epollfd,int fd,int sockfd,char *buf);
+void do_read(int epollfd,int fd,int sockfd,char *buf);
 //写处理
-void write(int epollfd,int fd,int sockfd,char *buf);
+void do_write(int epollfd,int fd,int sockfd,char *buf);
 //添加注册事件
 void add_event(int epollfd,int fd,int state);
 //修改注册事件
@@ -61,7 +61,7 @@ void handle_connection(int sockfd)
     struct epoll_event events[EPOLLEVENTS];
     char buf[MAXSIZE];
     int ret;
-    epollfd = epoll_create(FDSIZE);
+    epollfd = epoll_create(FD_SIZE);
     add_event(epollfd,STDIN_FILENO,EPOLLIN);
     for ( ; ; )
     {
@@ -86,7 +86,7 @@ void handle_events(int epollfd,struct epoll_event *events,int num,int sockfd,cha
     }
 }
 
-void read(int epollfd,int fd,int sockfd,char *buf)
+void do_read(int epollfd,int fd,int sockfd,char *buf)
 {
     int nread;
     nread = read(fd,buf,MAXSIZE);
@@ -112,7 +112,7 @@ void read(int epollfd,int fd,int sockfd,char *buf)
     }
 }
 
-void write(int epollfd,int fd,int sockfd,char *buf)
+void do_write(int epollfd,int fd,int sockfd,char *buf)
 {
     int nwrite;
     nwrite = write(fd,buf,strlen(buf));

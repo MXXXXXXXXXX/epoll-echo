@@ -34,9 +34,9 @@ void handle_events(int epollfd,struct epoll_event *events,int num,int listenfd,c
 //处理接收到的连接
 void handle_accpet(int epollfd,int listenfd);
 //读处理
-void read(int epollfd,int fd,char *buf);
+void do_read(int epollfd,int fd,char *buf);
 //写处理
-void write(int epollfd,int fd,char *buf);
+void do_write(int epollfd,int fd,char *buf);
 //添加注册事件
 void add_event(int epollfd,int fd,int state);
 //修改注册事件
@@ -87,7 +87,7 @@ void handle_epoll(int listenfd)
     char buf[MAXSIZE];
     memset(buf,0,MAXSIZE);
     //创建一个描述符
-    epollfd = epoll_create(FDSIZE);
+    epollfd = epoll_create(FD_SIZE);
     //向监听描述符添加事件并放入内核事件表中
     add_event(epollfd,listenfd,EPOLLIN);
     for ( ; ; )
@@ -114,9 +114,9 @@ void handle_events(int epollfd,struct epoll_event *events,int num,int listenfd,c
         if ((fd == listenfd) &&(events[i].events & EPOLLIN))
             handle_accpet(epollfd,listenfd);
         else if (events[i].events & EPOLLIN)
-            read(epollfd,fd,buf);
+            do_read(epollfd,fd,buf);
         else if (events[i].events & EPOLLOUT)
-            write(epollfd,fd,buf);
+            do_write(epollfd,fd,buf);
     }
 }
 
@@ -137,7 +137,7 @@ void handle_accpet(int epollfd,int listenfd)
     }
 }
 
-void read(int epollfd,int fd,char *buf)
+void do_read(int epollfd,int fd,char *buf)
 {
     int nread;
     nread = read(fd,buf,MAXSIZE);
@@ -163,7 +163,7 @@ void read(int epollfd,int fd,char *buf)
     }
 }
 
-void write(int epollfd,int fd,char *buf)
+void do_write(int epollfd,int fd,char *buf)
 {
     int nwrite;
     nwrite = write(fd,buf,strlen(buf));
@@ -188,7 +188,7 @@ void add_event(int epollfd,int fd,int state)
     epoll_ctl(epollfd,EPOLL_CTL_ADD,fd,&ev);
 }
 
-static void delete_event(int epollfd,int fd,int state)
+void delete_event(int epollfd,int fd,int state)
 {
     //删除注册事件
     struct epoll_event ev;
@@ -197,7 +197,7 @@ static void delete_event(int epollfd,int fd,int state)
     epoll_ctl(epollfd,EPOLL_CTL_DEL,fd,&ev);
 }
 
-static void modify_event(int epollfd,int fd,int state)
+void modify_event(int epollfd,int fd,int state)
 {
     struct epoll_event ev;
     ev.events = state;
